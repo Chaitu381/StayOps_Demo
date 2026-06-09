@@ -204,10 +204,12 @@ function OwnerCard({
       toast.error("Start date and expiry date are required");
       return;
     }
-
+  
+    const previousForm = form;
+  
     setSaving(true);
     setSaved(false);
-
+  
     try {
       await api.updateOwnerSubscription(owner.ownerId, {
         subscriptionPlan: nextForm.subscriptionPlan,
@@ -215,22 +217,30 @@ function OwnerCard({
         subscriptionStartDate: nextForm.subscriptionStartDate,
         subscriptionExpiryDate: nextForm.subscriptionExpiryDate,
       });
-
+  
       setSaved(true);
       setTimeout(() => setSaved(false), 1200);
+  
       onUpdated();
     } catch (err) {
+      setForm(previousForm);
+  
       toast.error(
-        err instanceof ApiError ? err.message : "Failed to update subscription"
+        err instanceof ApiError
+          ? err.message
+          : "Failed to update subscription"
       );
     } finally {
       setSaving(false);
     }
   }
 
-  function updateForm<K extends keyof OwnerForm>(key: K, value: OwnerForm[K]) {
+  function updateForm<K extends keyof OwnerForm>(
+    key: K,
+    value: OwnerForm[K]
+  ) {
     const nextForm = { ...form, [key]: value };
-    setForm(nextForm);
+  
     saveChanges(nextForm);
   }
 
