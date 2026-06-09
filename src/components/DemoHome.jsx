@@ -1,20 +1,19 @@
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 
 export default function HomeDemo() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const demoSuperAdminLogin = () => {
+  const demoOwnerLogin = () => {
     login({
       username: "owner",
       password: "owner123",
       role: "OWNER",
-      pgId: 1,
+      ownerId: 1,
     });
 
-    navigate("/super-admin/pgs");
+    navigate("/owner/pgs");
   };
 
   const demoAdminLogin = () => {
@@ -39,82 +38,30 @@ export default function HomeDemo() {
     navigate("/pg/1/dashboard");
   };
 
+  const buttonStyle: React.CSSProperties = {
+    height: "46px",
+    width: "100%",
+    borderRadius: "16px",
+    backgroundColor: "#ffffff",
+    color: "black",
+    fontSize: "14px",
+    fontWeight: 600,
+    boxShadow: "0 18px 45px rgba(0,0,0,0.22)",
+    transition: "all 0.2s ease",
+  };
+
   return (
     <div className="space-y-3 mt-4">
-      <button
-        type="button"
-        onClick={demoSuperAdminLogin}
-        style={{
-          height: "46px",
-          width: "100%",
-          borderRadius: "16px",
-          backgroundColor: "#ffffff",
-          color: "black",
-          fontSize: "14px",
-          fontWeight: 600,
-          boxShadow: "0 18px 45px rgba(0,0,0,0.22)",
-          transition: "all 0.2s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = "white";
-          e.currentTarget.style.backgroundColor = "#171717";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = "black";
-          e.currentTarget.style.backgroundColor = "#ffffff";
-        }}
-      >
-        Demo Super Admin
+
+      <button type="button" onClick={demoOwnerLogin} style={buttonStyle}>
+        Demo Owner
       </button>
 
-      <button
-        type="button"
-        onClick={demoSuperAdminLogin}
-        style={{
-          height: "46px",
-          width: "100%",
-          borderRadius: "16px",
-          backgroundColor: "#ffffff",
-          color: "black",
-          fontSize: "14px",
-          fontWeight: 600,
-          boxShadow: "0 18px 45px rgba(0,0,0,0.22)",
-          transition: "all 0.2s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = "white";
-          e.currentTarget.style.backgroundColor = "#171717";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = "black";
-          e.currentTarget.style.backgroundColor = "#ffffff";
-        }}
-      >
+      <button type="button" onClick={demoAdminLogin} style={buttonStyle}>
         Demo Admin
       </button>
-      <button
-        type="button"
-        onClick={demoSuperAdminLogin}
-        style={{
-          height: "46px",
-          width: "100%",
-          borderRadius: "16px",
-          backgroundColor: "#ffffff",
-          color: "black",
-          fontSize: "14px",
-          fontWeight: 600,
-          boxShadow: "0 18px 45px rgba(0,0,0,0.22)",
-          transition: "all 0.2s ease",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.color = "white";
-          e.currentTarget.style.backgroundColor = "#171717";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.color = "black";
-          e.currentTarget.style.backgroundColor = "#ffffff";
-        }}
-      >
+
+      <button type="button" onClick={demoWardenLogin} style={buttonStyle}>
         Demo Warden
       </button>
     </div>
