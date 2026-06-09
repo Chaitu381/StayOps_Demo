@@ -300,7 +300,7 @@ export default function Login() {
                   Contact your administrator
                 </span>
               </p>
-              {/* <HomeDemo/> */}
+              <HomeDemo/>
             </form>
           </div>
         </div>
