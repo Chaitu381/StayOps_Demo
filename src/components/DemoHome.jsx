@@ -1,12 +1,14 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
-import { setSelectedPgId } from "@/lib/api";
+import { clearSelectedPgId, setSelectedPgId } from "@/lib/api";
 
 export default function HomeDemo() {
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const demoOwnerLogin = () => {
+    clearSelectedPgId();
+
     login({
       username: "owner",
       password: "owner123",
@@ -14,7 +16,7 @@ export default function HomeDemo() {
       ownerId: 1,
     });
 
-    navigate("/owner/pgs");
+    navigate("/owner/pgs", { replace: true });
   };
 
   const demoAdminLogin = () => {
@@ -27,7 +29,7 @@ export default function HomeDemo() {
       pgId: 1,
     });
 
-    navigate("/pg/1/dashboard");
+    navigate("/pg/1/dashboard", { replace: true });
   };
 
   const demoWardenLogin = () => {
@@ -40,10 +42,10 @@ export default function HomeDemo() {
       pgId: 1,
     });
 
-    navigate("/pg/1/dashboard");
+    navigate("/pg/1/dashboard", { replace: true });
   };
 
-  const buttonStyle: React.CSSProperties = {
+  const buttonStyle = {
     height: "46px",
     width: "100%",
     borderRadius: "16px",
