@@ -12,6 +12,9 @@ export interface AuthCreds {
   username: string;
   password: string;
   role: "SUPER_ADMIN" | "OWNER" | "ADMIN" | "WARDEN";
+
+  pgId?: number | string | null;
+  ownerId?: number | string | null;
 }
 
 export interface AuthCheckResponse {
