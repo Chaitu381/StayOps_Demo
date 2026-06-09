@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
+import { setSelectedPgId } from "@/lib/api";
 
 export default function HomeDemo() {
   const navigate = useNavigate();
@@ -17,24 +18,28 @@ export default function HomeDemo() {
   };
 
   const demoAdminLogin = () => {
+    setSelectedPgId(1);
+  
     login({
       username: "admin",
       password: "admin123",
       role: "ADMIN",
       pgId: 1,
     });
-
+  
     navigate("/pg/1/dashboard");
   };
-
+  
   const demoWardenLogin = () => {
+    setSelectedPgId(1);
+  
     login({
       username: "warden",
       password: "warden123",
       role: "WARDEN",
       pgId: 1,
     });
-
+  
     navigate("/pg/1/dashboard");
   };
 
