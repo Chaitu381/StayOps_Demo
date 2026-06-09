@@ -4,7 +4,6 @@ import {
   Building2,
   CalendarDays,
   CheckCircle2,
-  Crown,
   Loader2,
   LogOut,
   Plus,
@@ -46,6 +45,7 @@ type OwnerForm = {
   subscriptionExpiryDate: string;
 };
 
+type ExpiryStatus = "expired" | "soon" | "safe";
 
 export default function SuperAdminPgs() {
   const navigate = useNavigate();
@@ -80,20 +80,6 @@ export default function SuperAdminPgs() {
   useEffect(() => {
     refresh();
   }, []);
-
-  const stats = useMemo(() => {
-    const list = owners || [];
-    return {
-      totalOwners: list.length,
-      totalPgs: list.reduce((sum, o) => sum + (o.totalPgs ?? 0), 0),
-      active: list.filter(
-        (o) => o.subscriptionActive ?? o.subscriptionStatus === "ACTIVE"
-      ).length,
-      inactive: list.filter(
-        (o) => !(o.subscriptionActive ?? o.subscriptionStatus === "ACTIVE")
-      ).length,
-    };
-  }, [owners]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -134,7 +120,6 @@ export default function SuperAdminPgs() {
 
       <main className="mx-auto max-w-7xl space-y-5 p-4">
         {loading && <LoadingState label="Loading owners..." />}
-
         {!loading && error && <ErrorState error={error} />}
 
         {!loading && apiMissing && (
@@ -188,15 +173,17 @@ function OwnerCard({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  const [form, setForm] = useState<OwnerForm>({
-    subscriptionPlan: owner.subscriptionPlan || "TRIAL",
-    subscriptionActive:
-      owner.subscriptionActive ?? owner.subscriptionStatus === "ACTIVE",
-    subscriptionStartDate: owner.subscriptionStartDate || "",
-    subscriptionExpiryDate: owner.subscriptionExpiryDate || "",
-  });
+  const [form, setForm] = useState<OwnerForm>(() => ownerToForm(owner));
+
+  useEffect(() => {
+    setForm(ownerToForm(owner));
+  }, [owner]);
 
   const expiryInfo = getExpiryInfo(form.subscriptionExpiryDate);
+
+  const isAccessActive =
+    form.subscriptionActive === true && expiryInfo.status !== "expired";
+
   const initials = getInitials(owner.ownerName || `Owner ${owner.ownerId}`);
 
   async function saveChanges(nextForm: OwnerForm) {
@@ -204,27 +191,31 @@ function OwnerCard({
       toast.error("Start date and expiry date are required");
       return;
     }
-  
+
     const previousForm = form;
-  
+
+    setForm(nextForm);
     setSaving(true);
     setSaved(false);
-  
+
     try {
-      await api.updateOwnerSubscription(owner.ownerId, {
+      const updatedOwner = (await api.updateOwnerSubscription(owner.ownerId, {
         subscriptionPlan: nextForm.subscriptionPlan,
         subscriptionActive: nextForm.subscriptionActive,
         subscriptionStartDate: nextForm.subscriptionStartDate,
         subscriptionExpiryDate: nextForm.subscriptionExpiryDate,
-      });
-  
+      })) as OwnerSummary | undefined;
+
+      if (updatedOwner) {
+        setForm(ownerToForm(updatedOwner));
+      }
+
       setSaved(true);
       setTimeout(() => setSaved(false), 1200);
-  
       onUpdated();
     } catch (err) {
       setForm(previousForm);
-  
+
       toast.error(
         err instanceof ApiError
           ? err.message
@@ -239,14 +230,23 @@ function OwnerCard({
     key: K,
     value: OwnerForm[K]
   ) {
-    const nextForm = { ...form, [key]: value };
-  
+    let nextForm: OwnerForm = { ...form, [key]: value };
+
+    if (key === "subscriptionExpiryDate") {
+      const nextExpiryInfo = getExpiryInfo(String(value));
+
+      nextForm = {
+        ...nextForm,
+        subscriptionActive: nextExpiryInfo.status !== "expired",
+      };
+    }
+
     saveChanges(nextForm);
   }
 
   return (
     <Card
-    style={{ animationDelay: `${index * 90}ms` }}
+      style={{ animationDelay: `${index * 90}ms` }}
       className={`
         owner-card-animation group overflow-hidden rounded-3xl border bg-white p-5
         shadow-lg transition-all duration-300 hover:-translate-y-2 hover:scale-[1.015]
@@ -279,7 +279,7 @@ function OwnerCard({
 
       <div className="mb-4 grid grid-cols-2 gap-3">
         <MiniMetric label="PGs" value={owner.totalPgs ?? 0} />
-        <MiniMetric label="Status" value={form.subscriptionActive ? "Active" : "Off"} />
+        <MiniMetric label="Status" value={isAccessActive ? "Active" : "Inactive"} />
       </div>
 
       <div className="space-y-3">
@@ -310,15 +310,16 @@ function OwnerCard({
             <div className="flex items-center gap-3">
               <span
                 className={`rounded-full px-3 py-1 text-xs font-black ${
-                  form.subscriptionActive
+                  isAccessActive
                     ? "bg-green-100 text-green-700"
                     : "bg-red-100 text-red-700"
                 }`}
               >
-                {form.subscriptionActive ? "ACTIVE" : "INACTIVE"}
+                {isAccessActive ? "ACTIVE" : "INACTIVE"}
               </span>
+
               <Switch
-                checked={form.subscriptionActive}
+                checked={isAccessActive}
                 disabled={saving}
                 onCheckedChange={(checked) =>
                   updateForm("subscriptionActive", checked)
@@ -372,15 +373,18 @@ function OwnerCard({
   );
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <Card className="rounded-2xl border bg-white p-4 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-        {label}
-      </p>
-      <p className="mt-1 text-2xl font-black text-slate-950">{value}</p>
-    </Card>
-  );
+function ownerToForm(owner: OwnerSummary): OwnerForm {
+  const expiryInfo = getExpiryInfo(owner.subscriptionExpiryDate || "");
+
+  return {
+    subscriptionPlan: owner.subscriptionPlan || "TRIAL",
+    subscriptionActive:
+      expiryInfo.status === "expired"
+        ? false
+        : owner.subscriptionActive ?? owner.subscriptionStatus === "ACTIVE",
+    subscriptionStartDate: owner.subscriptionStartDate || "",
+    subscriptionExpiryDate: owner.subscriptionExpiryDate || "",
+  };
 }
 
 function MiniMetric({ label, value }: { label: string; value: React.ReactNode }) {
@@ -461,7 +465,10 @@ function getInitials(name: string) {
     .join("");
 }
 
-function getExpiryInfo(expiryDate: string) {
+function getExpiryInfo(expiryDate: string): {
+  status: ExpiryStatus;
+  text: string;
+} {
   if (!expiryDate) {
     return { status: "soon", text: "Expiry date not set" };
   }
@@ -475,10 +482,15 @@ function getExpiryInfo(expiryDate: string) {
     (expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
   );
 
-  if (diffDays < 0) {
+  if (diffDays <= 0) {
+    const days = Math.abs(diffDays);
+
     return {
       status: "expired",
-      text: `Expired ${Math.abs(diffDays)} day${Math.abs(diffDays) === 1 ? "" : "s"} ago`,
+      text:
+        days === 0
+          ? "Expired today"
+          : `Expired ${days} day${days === 1 ? "" : "s"} ago`,
     };
   }
 
