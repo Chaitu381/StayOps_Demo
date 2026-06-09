@@ -19,27 +19,27 @@ export default function HomeDemo() {
 
   const demoAdminLogin = () => {
     setSelectedPgId(1);
-  
+
     login({
       username: "admin",
       password: "admin123",
       role: "ADMIN",
       pgId: 1,
     });
-  
+
     navigate("/pg/1/dashboard");
   };
-  
+
   const demoWardenLogin = () => {
     setSelectedPgId(1);
-  
+
     login({
       username: "warden",
       password: "warden123",
       role: "WARDEN",
       pgId: 1,
     });
-  
+
     navigate("/pg/1/dashboard");
   };
 
@@ -57,7 +57,6 @@ export default function HomeDemo() {
 
   return (
     <div className="space-y-3 mt-4">
-
       <button type="button" onClick={demoOwnerLogin} style={buttonStyle}>
         Demo Owner
       </button>
