@@ -109,13 +109,13 @@ export default function Login() {
   }
 
   return (
-    <div className="relative flex h-screen items-center justify-center overflow-hidden bg-[#05070a] p-5">
+    <div className="relative flex min-h-screen items-center justify-center bg-[#05070a] p-5 overflow-y-auto">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute left-1/2 top-[-160px] h-[330px] w-[620px] -translate-x-1/2 rounded-full bg-white/[0.055] blur-3xl" />
         <div className="absolute bottom-[-200px] left-1/2 h-[330px] w-[680px] -translate-x-1/2 rounded-full bg-white/[0.045] blur-3xl" />
       </div>
 
-      <Card className="relative grid h-[78vh] max-h-[580px] min-h-[480px] w-full max-w-[1080px] overflow-hidden rounded-[26px] border border-white/20 bg-white p-0 shadow-[0_35px_130px_rgba(255,255,255,0.08)] md:grid-cols-[1fr_0.85fr]">
+      <Card className="relative grid min-h-[480px] w-full max-w-[1080px] overflow-hidden rounded-[26px] border border-white/20 bg-white p-0 shadow-[0_35px_130px_rgba(255,255,255,0.08)] md:grid-cols-[1fr_0.85fr]">
         <div className="relative hidden overflow-hidden bg-black text-white md:block">
           <div
             className="absolute inset-0 bg-contain bg-center bg-no-repeat opacity-72"
