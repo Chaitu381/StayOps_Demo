@@ -137,7 +137,14 @@ export default function SuperAdminPgs() {
 
         {!loading && !error && owners && owners.length > 0 && (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {owners.map((owner, index) => (
+            {[...owners]
+            .sort((a, b) => {
+              const aTime = new Date(a.subscriptionExpiryDate || "1900-01-01").getTime();
+              const bTime = new Date(b.subscriptionExpiryDate || "1900-01-01").getTime();
+
+              return aTime - bTime;
+            })
+            .map((owner, index) => (
               <OwnerCard
                 key={owner.ownerId}
                 owner={owner}
@@ -157,6 +164,48 @@ export default function SuperAdminPgs() {
       />
     </div>
   );
+}
+
+function addDays(dateStr: string, days: number) {
+  const date = new Date(dateStr);
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function addMonths(dateStr: string, months: number) {
+  const date = new Date(dateStr);
+  date.setMonth(date.getMonth() + months);
+  return date.toISOString().slice(0, 10);
+}
+
+function monthDiff(startStr: string, endStr: string) {
+  const start = new Date(startStr);
+  const end = new Date(endStr);
+
+  let months =
+    (end.getFullYear() - start.getFullYear()) * 12 +
+    (end.getMonth() - start.getMonth());
+
+  if (end.getDate() < start.getDate()) months--;
+
+  return months;
+}
+
+function planFromDates(startDate: string, expiryDate: string) {
+  const months = monthDiff(startDate, expiryDate);
+
+  if (months >= 12) return "YEARLY";
+  if (months >= 3) return "QUARTERLY";
+  return "MONTHLY";
+}
+
+function expiryFromPlan(startDate: string, plan: string) {
+  if (plan === "TRIAL") return addDays(startDate, 7);
+  if (plan === "MONTHLY") return addMonths(startDate, 1);
+  if (plan === "QUARTERLY") return addMonths(startDate, 3);
+  if (plan === "YEARLY") return addMonths(startDate, 12);
+
+  return addDays(startDate, 7);
 }
 
 function OwnerCard({
@@ -232,13 +281,48 @@ function OwnerCard({
   ) {
     let nextForm: OwnerForm = { ...form, [key]: value };
 
-    if (key === "subscriptionExpiryDate") {
-      const nextExpiryInfo = getExpiryInfo(String(value));
+    if (key === "subscriptionPlan") {
+      const plan = String(value);
 
       nextForm = {
         ...nextForm,
+        subscriptionPlan: plan,
+        subscriptionExpiryDate: expiryFromPlan(
+          form.subscriptionStartDate,
+          plan
+        ),
+      };
+    }
+
+    if (key === "subscriptionStartDate") {
+      const startDate = String(value);
+
+      nextForm = {
+        ...nextForm,
+        subscriptionStartDate: startDate,
+        subscriptionExpiryDate: expiryFromPlan(
+          startDate,
+          form.subscriptionPlan
+        ),
+      };
+    }
+
+    if (key === "subscriptionExpiryDate") {
+      const expiryDate = String(value);
+      const nextExpiryInfo = getExpiryInfo(expiryDate);
+
+      nextForm = {
+        ...nextForm,
+        subscriptionExpiryDate: expiryDate,
         subscriptionActive: nextExpiryInfo.status !== "expired",
       };
+
+      if (form.subscriptionPlan !== "TRIAL") {
+        nextForm.subscriptionPlan = planFromDates(
+          form.subscriptionStartDate,
+          expiryDate
+        );
+      }
     }
 
     saveChanges(nextForm);
@@ -247,16 +331,14 @@ function OwnerCard({
   return (
     <Card
       style={{ animationDelay: `${index * 90}ms` }}
-      className={`
-        owner-card-animation group overflow-hidden rounded-3xl border bg-white p-5
-        shadow-lg transition-all duration-300 hover:-translate-y-2 hover:scale-[1.015]
-        ${expiryInfo.status === "expired" ? "border-red-300" : ""}
-        ${expiryInfo.status === "soon" ? "border-orange-300" : ""}
-        ${expiryInfo.status === "safe" ? "hover:border-blue-400" : ""}
-      `}
+      className={`owner-card-animation group overflow-hidden rounded-3xl border bg-white p-5 shadow-lg transition-all duration-300 hover:-translate-y-2 hover:scale-[1.015] hover:shadow-xl ${
+        expiryInfo.status === "expired"
+          ? "border-red-200"
+          : expiryInfo.status === "soon"
+          ? "border-orange-200"
+          : "border-slate-200"
+      }`}
     >
-      <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-purple-500 opacity-80" />
-
       <div className="mb-5 flex items-start gap-4">
         <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-sky-500 to-blue-300 text-lg font-black text-white shadow-lg transition-all duration-300 group-hover:rotate-3 group-hover:scale-110">
           {initials}
@@ -291,7 +373,7 @@ function OwnerCard({
               disabled={saving}
               onValueChange={(value) => updateForm("subscriptionPlan", value)}
             >
-              <SelectTrigger className="h-9 w-36 rounded-xl border-blue-100 bg-blue-50 font-bold text-blue-700 shadow-sm transition-all hover:border-blue-300">
+              <SelectTrigger className="h-9 w-44 rounded-xl border-blue-100 bg-blue-50 font-bold text-blue-700 shadow-sm transition-all">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -346,12 +428,16 @@ function OwnerCard({
         />
 
         <div
-          className={`rounded-2xl px-4 py-3 text-sm font-bold ${
+          className={`rounded-2xl px-4 py-3 text-sm font-bold transition-all ${
             expiryInfo.status === "expired"
-              ? "bg-red-50 text-red-700"
+              ? "bg-red-50 text-red-700 border border-red-200 shadow-[0_8px_25px_rgba(239,68,68,0.12)]"
               : expiryInfo.status === "soon"
-              ? "bg-orange-50 text-orange-700"
-              : "bg-green-50 text-green-700"
+              ? "bg-orange-50 text-orange-700 border border-orange-200 shadow-[0_8px_25px_rgba(249,115,22,0.12)]"
+              : expiryInfo.daysRemaining > 180
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-[0_8px_25px_rgba(16,185,129,0.15)]"
+              : expiryInfo.daysRemaining > 90
+              ? "bg-green-50 text-green-700 border border-green-200 shadow-[0_8px_25px_rgba(34,197,94,0.12)]"
+              : "bg-lime-50 text-lime-700 border border-lime-200 shadow-[0_8px_25px_rgba(132,204,22,0.12)]"
           }`}
         >
           {expiryInfo.text}
@@ -468,9 +554,14 @@ function getInitials(name: string) {
 function getExpiryInfo(expiryDate: string): {
   status: ExpiryStatus;
   text: string;
+  daysRemaining: number;
 } {
   if (!expiryDate) {
-    return { status: "soon", text: "Expiry date not set" };
+    return {
+      status: "soon",
+      text: "Expiry date not set",
+      daysRemaining: 0,
+    };
   }
 
   const today = new Date();
@@ -491,6 +582,7 @@ function getExpiryInfo(expiryDate: string): {
         days === 0
           ? "Expired today"
           : `Expired ${days} day${days === 1 ? "" : "s"} ago`,
+      daysRemaining: diffDays,
     };
   }
 
@@ -498,11 +590,13 @@ function getExpiryInfo(expiryDate: string): {
     return {
       status: "soon",
       text: `Expires in ${diffDays} day${diffDays === 1 ? "" : "s"}`,
+      daysRemaining: diffDays,
     };
   }
 
   return {
     status: "safe",
     text: `Active for ${diffDays} more days`,
+    daysRemaining: diffDays,
   };
 }
