@@ -1,6 +1,6 @@
 // const DEFAULT_BASE = "http://localhost:381";
-
-const DEFAULT_BASE = "https://stayops-tuul.onrender.com";
+// const DEFAULT_BASE = "https://stayops-tuul.onrender.com";
+const DEFAULT_BASE = "https://stayops.up.railway.app/";
 
 export const API_BASE_URL =
   (import.meta.env.VITE_API_BASE_URL as string | undefined) || DEFAULT_BASE;
