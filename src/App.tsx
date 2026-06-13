@@ -90,7 +90,7 @@ const App = () => (
               path="/owners/:ownerId/pgs/create"
               element={
                 <ProtectedRoute roles={["SUPER_ADMIN"]}>
-                  <CreatePg />
+                  <CreatePg/>
                 </ProtectedRoute>
               }
             />
@@ -292,7 +292,7 @@ const App = () => (
             <Route
               path="/pg/:pgId/workers"
               element={
-                <ProtectedRoute roles={["SUPER_ADMIN", "ADMIN", "WARDEN"]}>
+                <ProtectedRoute roles={["SUPER_ADMIN","OWNER", "ADMIN", "WARDEN"]}>
                   <PgScope>
                     <WorkersPage />
                   </PgScope>
@@ -303,7 +303,7 @@ const App = () => (
             <Route
               path="/pg/:pgId/menu"
               element={
-                <ProtectedRoute roles={["SUPER_ADMIN", "ADMIN", "WARDEN"]}>
+                <ProtectedRoute roles={["SUPER_ADMIN","OWNER" ,"ADMIN", "WARDEN"]}>
                   <PgScope>
                     <MenuPage />
                   </PgScope>
