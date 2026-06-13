@@ -200,6 +200,7 @@ function getBedFloorNo(bed: Bed) {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { pgId } = useParams();
+  const activePgId = pgId || localStorage.getItem("selectedPgId");
   const location = useLocation();
   const { creds, logout } = useAuth();
 
@@ -662,7 +663,7 @@ export default function Dashboard() {
             value="View"
             subtext="Weekly menu & meals"
             variant="secondary"
-            onClick={() => navigate(pgId ? `/pg/${pgId}/menu` : "/food-menu")}
+            onClick={() => navigate(`/pg/${activePgId}/menu`)}
           />
 
           <StatCard
@@ -671,7 +672,7 @@ export default function Dashboard() {
             value="View"
             subtext="Staff & shifts"
             variant="primary"
-            onClick={() => navigate(pgId ? `/pg/${pgId}/workers` : "/workers")}
+            onClick={() => navigate(`/pg/${activePgId}/workers`)}
           />
         </motion.div>
 
