@@ -60,8 +60,8 @@ export default function WorkersPage() {
   const { pgId } = useParams();
   const { creds } = useAuth();
 
-  const canEdit = creds?.role === "SUPER_ADMIN" || creds?.role === "ADMIN";
-  const canDelete = creds?.role === "SUPER_ADMIN";
+  const canEdit = ["SUPER_ADMIN", "ADMIN", "OWNER"].includes(creds?.role ?? "");
+  const canDelete = ["SUPER_ADMIN", "OWNER"].includes(creds?.role ?? "");
 
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [loading, setLoading] = useState(true);
