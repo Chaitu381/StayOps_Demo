@@ -29,7 +29,7 @@ import { LoadingState, ErrorState } from "@/components/DataState";
 import EmptyState from "@/components/EmptyState";
 import { toast } from "sonner";
 
-type Role = "SUPER_ADMIN" | "ADMIN" | "WARDEN";
+type Role = "SUPER_ADMIN" | "OWNER" | "ADMIN" | "WARDEN";
 
 interface MenuItem {
   id: number;
@@ -169,8 +169,8 @@ export default function MenuPage() {
 
   const role = creds?.role as Role | undefined;
 
-  const canEdit = role === "SUPER_ADMIN" || role === "ADMIN";
-  const canDelete = role === "SUPER_ADMIN";
+  const canEdit = ["SUPER_ADMIN", "ADMIN", "OWNER", "WARDEN"].includes(role);
+  const canDelete = role === "SUPER_ADMIN" || "OWNER" || "ADMIN" || "WARDEN";
 
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
